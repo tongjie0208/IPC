@@ -1,0 +1,136 @@
+#include "ooo_cpu.h"
+#include <vector>
+
+#define IML_SIZE 8192
+#define PREFETCH_DEGREE 128
+
+
+
+vector<uint64_t> iml(IML_SIZE);
+uint ind;
+
+
+
+void O3_CPU::l1i_prefetcher_initialize() 
+{
+    for(int i = 0; i < IML_SIZE; i++) {
+        iml[i] = 0;
+    }
+    ind = 0;    
+}
+
+void O3_CPU::l1i_prefetcher_branch_operate(uint64_t ip, uint8_t branch_type, uint64_t branch_target)
+{
+
+}
+
+void O3_CPU::l1i_prefetcher_cache_operate(uint64_t v_addr, uint8_t cache_hit, uint8_t prefetch_hit)
+{    
+    if(cache_hit == 0) {
+        uint i;
+        for(i = 0; i < iml.size(); i++) {
+            if(iml[i] == 0){
+                iml[i] = v_addr;
+                return;
+            }
+        }
+
+        for(i = ind; i < iml.size() - PREFETCH_DEGREE; i++) {
+            if(v_addr == iml[i]) {
+                ind = i;
+                for(int k = 1; k <= PREFETCH_DEGREE; k++) {
+                    prefetch_code_line(v_addr, iml[i+k]);
+                }
+                uint64_t pf_addr = v_addr + (1<<LOG2_BLOCK_SIZE);
+                prefetch_code_line(v_addr, pf_addr);
+                uint64_t pf_addr2 = v_addr + (2<<LOG2_BLOCK_SIZE);
+                prefetch_code_line(v_addr, pf_addr2);
+                break;
+            }
+        }
+
+        if(i == iml.size() - PREFETCH_DEGREE) {
+            for(i = 0; i < ind; i++) {
+                if(v_addr == iml[i]) {
+                    ind = i;
+                    for(int k = 1; k <= PREFETCH_DEGREE; k++) {
+                        prefetch_code_line(v_addr, iml[i+k]);
+                    }
+                    uint64_t pf_addr = v_addr + (1<<LOG2_BLOCK_SIZE);
+                    prefetch_code_line(v_addr, pf_addr);
+                    uint64_t pf_addr2 = v_addr + (2<<LOG2_BLOCK_SIZE);
+                    prefetch_code_line(v_addr, pf_addr2);
+                    break;
+                }
+            }
+        }
+
+        // for(i = ind; i < iml.size(); i++) {
+        //     if(v_addr == iml[i]) {
+        //         ind = i;
+        //         if(i < iml.size() - PREFETCH_DEGREE) {
+        //             for(int k = 1; k <= PREFETCH_DEGREE; k++) {
+        //                 prefetch_code_line(v_addr, iml[i+k]);
+        //             }
+        //         }
+        //         else {
+        //             for(int k = 1; k < iml.size() - i; k++) {
+        //                 prefetch_code_line(v_addr, iml[i+k]);
+        //             }
+        //         }
+
+        //         //Next-2-Line
+        //         uint64_t pf_addr = v_addr + (1<<LOG2_BLOCK_SIZE);
+        //         prefetch_code_line(v_addr, pf_addr);
+        //         uint64_t pf_addr2 = v_addr + (2<<LOG2_BLOCK_SIZE);
+        //         prefetch_code_line(v_addr, pf_addr2);
+
+        //         break;
+        //     }
+        // }
+
+        // if(i == iml.size()) {
+        //     for(i = 0; i < ind; i++) {
+        //         if(v_addr == iml[i]) {
+        //             ind = i;
+        //             if(i < iml.size() - PREFETCH_DEGREE) {
+        //                 for(int k = 1; k <= PREFETCH_DEGREE; k++) {
+        //                     prefetch_code_line(v_addr, iml[i+k]);
+        //                 }
+        //             }
+        //             else {
+        //                 for(int k = 1; k < iml.size() - i; k++) {
+        //                     prefetch_code_line(v_addr, iml[i+k]);
+        //                 }
+        //             }
+
+        //             //Next-2-Line
+        //             uint64_t pf_addr = v_addr + (1<<LOG2_BLOCK_SIZE);
+        //             prefetch_code_line(v_addr, pf_addr);
+        //             uint64_t pf_addr2 = v_addr + (2<<LOG2_BLOCK_SIZE);
+        //             prefetch_code_line(v_addr, pf_addr2);
+                    
+        //             break;
+        //         }
+        //     }
+        // }
+
+
+    }
+
+}
+
+void O3_CPU::l1i_prefetcher_cycle_operate()
+{
+
+}
+
+void O3_CPU::l1i_prefetcher_cache_fill(uint64_t v_addr, uint32_t set, uint32_t way, uint8_t prefetch, uint64_t evicted_v_addr)
+{
+
+}
+
+void O3_CPU::l1i_prefetcher_final_stats()
+{
+
+}
